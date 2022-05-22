@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<title>phan2_bai2</title>
+</head>
+
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="title">
+				<h1>Các dữ liệu trong bảng 'car':</h1>
+
+				<hr>
+			</div>
+			<div class="col-8 ">
+
+				<div class='data'>
+					<table class="table">
+						<thead>
+							<tr>
+								<th scope="col">ID</th>
+								<th scope="col">Name</th>
+								<th scope="col">Year</th>
+								<th scope="col">Action</th>
+
+							</tr>
+						</thead>
+						<tbody>
+
+
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="col-4 border">
+				<h2>Control Panel:</h2>
+				<button type="button" class="btn btn-success" onclick="setMode('add')">Click here to switch to Add Row
+					mode</a></button>
+				<hr>
+				<form id='inputForm'>
+					<div class="mb-1">
+						<label class="form-label">ID</label>
+						<input class="form-control" id="idInput" type="number" placeholder="Integer Number Only"
+							required>
+					</div>
+					<div class="mb-1">
+
+						<label class="form-label">Name</label>
+						<input class="form-control" id="nameInput" type='text' required>
+
+					</div>
+					<div class="mb-1">
+
+						<label class="form-label">Year</label>
+						<input class="form-control" id="yearInput" type="number" required>
+					</div>
+
+
+					<button id='submitBtn' class="btn btn-primary" type='button'
+						onclick="addButtonHandler()">Update</button>
+					<button class="btn btn-secondary" type="button" onclick="resetForm()">Reset</button>
+					<h3 id='messenger'></h3>
+				</form>
+			</div>
+		</div>
+	</div>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous">
+		</script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+		integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+	<script type="text/javascript">
+		getAllRow();
+		setMode('add');
+
+		function resetForm() {
+			document.getElementById('inputForm').reset();
+			messengeEle = document.getElementById('messenger');
+			// messengeEle.className = '';
+			// messengeEle.classList.add('text-' + obj.color);
+			messengeEle.innerHTML = '';
+			// messengeEle.appendChild(document.createTextNode(obj.message));
+
+		}
+		function deleteButtonHandler(id) {
+			var isSure = confirm('Are you sure?')
+			if (isSure) {
+				$.post("Services/delete.php", {
+					'id': id
+				}, function (data) {
+					if (data == 'true') {
+						const element = document.getElementById(id);
+						element.remove();
+					}
+					else {
+						alert('Xoá không thành công:' + data);
+					}
+
+				})
+			}
+		}
+
+		function getAllRow() {
+			let allRow;
+			$.get("Services/fetchData.php", {
+			}, function (data) {
+
+
+				allRow = JSON.parse(data);
+
+				for (var i = 0; i < allRow.length; i++) {
+					id = allRow[i].id
+					name = allRow[i].name
+					year = allRow[i].year
+					// console.log(obj.id);
+					var table = document.getElementsByTagName('tbody')[0]
+					var row = document.createElement('tr')
+					row.setAttribute('id', id)
+					row.innerHTML = `
+			<td >${id}</td>
+			<td >${name}</td>
+            <td>${year}</td>
+            <td><button class="btn btn-warning" onclick="editButtonPrepare('${id}', '${name}', '${year}')">Edit</button>
+            <button class="btn btn-danger" onclick="deleteButtonHandler('${id}')">Delete</button></td>
+                    `
+					table.appendChild(row)
+
+				}
+				console.log(data);
+			})
+
+		}
+
+		function setMode(mode) {
+			if (mode == 'add') {
+				btn = document.getElementById('submitBtn');
+				btn.setAttribute("onClick", "addButtonHandler()");
+				btn.innerHTML = 'Add a new row';
+				document.getElementById('idInput').disabled = false;
+			} else {
+				btn = document.getElementById('submitBtn');
+				btn.setAttribute("onClick", "editButtonHandler()");
+				btn.innerHTML = 'Update this row';
+			}
+		}
+
+		function addButtonHandler() {
+			id = document.getElementById('idInput').value;
+			name = document.getElementById('nameInput').value;
+			year = document.getElementById('yearInput').value;
+			if (id!='' && name !=''  && year!=''){
+			add(id, name, year); } else {
+				alert('All field can not be empty!')
+			}
+		}
+
+		function add(id, name, year) {
+
+			$.post("Services/insert.php", {
+				"id": id,
+				"name": name,
+				"year": year
+			}, function (data) {
+				// document.getElementById('messenger').appendChild(document.createTextNode('Successfully! Click Cancel to go back a.php.'));
+
+				// var messages=data.messages;
+				// var color =data.color;
+				const obj = JSON.parse(data);
+				// obj =data;
+				messengeEle = document.getElementById('messenger');
+				messengeEle.className = '';
+				messengeEle.classList.add('text-' + obj.color);
+				messengeEle.innerHTML = '';
+				messengeEle.appendChild(document.createTextNode(obj.message));
+				if (obj.message == 'Successfully!') {
+					// console.log('Successfully!')
+					var table = document.getElementsByTagName('tbody')[0]
+					var row = document.createElement('tr')
+					row.setAttribute('id', id)
+					row.innerHTML = `
+			<td>${id}</td>
+			<td>${name}</td>
+            <td>${year}</td>
+            <td><button class="btn btn-warning" onclick="editButtonPrepare('${id}', '${name}','${year}')">Edit</button>
+            <button class="btn btn-danger" onclick="deleteButtonHandler('${id}')">Delete</button></td>
+                    `
+					table.appendChild(row)
+				}
+
+
+
+				// document.getElementById('messenger').appendChild(document.createTextNode(obj.color));
+			})
+			// .fail(function(){ alert('Insert failed!') ;})
+
+
+		}
+
+		function editButtonPrepare(id, name, year) {
+			document.getElementById('idInput').value = id;
+			document.getElementById('nameInput').value = name;
+			document.getElementById('yearInput').value = year;
+			document.getElementById('idInput').disabled = true;
+			setMode('update');
+		}
+
+		function editButtonHandler() {
+			id = document.getElementById('idInput').value;
+			name = document.getElementById('nameInput').value;
+			year = document.getElementById('yearInput').value;
+			if (id!='' && name !=''  && year!=''){
+				update(id, name, year); } else {
+				alert('All field can not be empty!')
+			}
+			
+		}
+
+		function update(id, name, year) {
+
+			$.post("Services/update.php", {
+				"id": id,
+				"name": name,
+				"year": year
+			}, function (data) {
+				// document.getElementById('messenger').appendChild(document.createTextNode('Successfully! Click Cancel to go back a.php.'));
+
+				const obj = JSON.parse(data);
+				messengeEle = document.getElementById('messenger');
+				messengeEle.className = '';
+				messengeEle.classList.add('text-' + obj.color);
+				messengeEle.innerHTML = '';
+				messengeEle.appendChild(document.createTextNode(obj.message));
+				if (obj.message == 'Update Successfully!') {
+					alert('Update Successfully!');
+					location.reload();
+				}
+			})
+			// .fail(function(){ alert('Insert failed!') ;})
+
+
+		}
+
+	</script>
+</body>
+
+</html>
